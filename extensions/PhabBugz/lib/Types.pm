@@ -13,11 +13,13 @@ use warnings;
 
 use Type::Library
     -base,
-    -declare => qw( Revision );
+    -declare => qw( Revision PhabUser Policy Project );
 use Type::Utils -all;
 use Types::Standard -types;
 
 class_type Revision, { class => 'Bugzilla::Extension::PhabBugz::Revision' };
+class_type Policy, { class => 'Bugzilla::Extension::PhabBugz::Policy' };
+class_type Project, { class => 'Bugzilla::Extension::PhabBugz::Project' };
 class_type PhabUser, { class => 'Bugzilla::Extension::PhabBugz::User' };
 
 1;

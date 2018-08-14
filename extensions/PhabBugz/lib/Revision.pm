@@ -19,6 +19,7 @@ use Bugzilla::Error;
 use Bugzilla::Util qw(trim);
 use Bugzilla::Extension::PhabBugz::Project;
 use Bugzilla::Extension::PhabBugz::User;
+use Bugzilla::Extension::PhabBugz::Types;
 use Bugzilla::Extension::PhabBugz::Util qw(request);
 
 #########################
@@ -39,9 +40,9 @@ has edit_policy      => ( is => 'ro',   isa => Str );
 has subscriber_count => ( is => 'ro',   isa => Int );
 has bug              => ( is => 'lazy', isa => Object );
 has author           => ( is => 'lazy', isa => Object );
-has reviewers        => ( is => 'lazy', isa => ArrayRef [Object] );
-has subscribers      => ( is => 'lazy', isa => ArrayRef [Object] );
-has projects         => ( is => 'lazy', isa => ArrayRef [Object] );
+has reviewers        => ( is => 'lazy', isa => ArrayRef [PhabUser] );
+has subscribers      => ( is => 'lazy', isa => ArrayRef [PhabUser] );
+has projects         => ( is => 'lazy', isa => ArrayRef [Project] );
 has reviewers_raw => (
     is  => 'ro',
     isa => ArrayRef [
@@ -284,13 +285,11 @@ sub update {
 
 sub _build_bug {
     my ($self) = @_;
-    return $self->{bug} ||=
-      Bugzilla::Bug->new( { id => $self->bug_id, cache => 1 } );
+    return Bugzilla::Bug->new( { id => $self->bug_id, cache => 1 } );
 }
 
 sub _build_author {
     my ($self) = @_;
-    return $self->{author} if $self->{author};
     my $phab_user = Bugzilla::Extension::PhabBugz::User->new_from_query(
       {
         phids => [ $self->author_phid ]
@@ -304,7 +303,6 @@ sub _build_author {
 sub _build_reviewers {
     my ($self) = @_;
 
-    return $self->{reviewers} if $self->{reviewers};
     return [] unless $self->reviewers_raw;
 
     my @phids;
@@ -329,13 +327,12 @@ sub _build_reviewers {
         }
     }
 
-    return $self->{reviewers} = $users;
+    return $users;
 }
 
 sub _build_subscribers {
     my ($self) = @_;
 
-    return $self->{subscribers} if $self->{subscribers};
     return [] unless $self->subscribers_raw->{subscriberPHIDs};
 
     my @phids;
@@ -349,7 +346,7 @@ sub _build_subscribers {
       }
     );
 
-    return $self->{subscribers} = $users;
+    return $users;
 }
 
 sub _build_projects {
@@ -367,7 +364,7 @@ sub _build_projects {
         );
     }
 
-    return $self->{projects} = \@projects;
+    return \@projects;
 }
 
 #########################

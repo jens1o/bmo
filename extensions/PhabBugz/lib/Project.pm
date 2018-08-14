@@ -33,7 +33,7 @@ has view_policy     => ( is => 'ro', isa => Str );
 has edit_policy     => ( is => 'ro', isa => Str );
 has join_policy     => ( is => 'ro', isa => Str );
 has members_raw     => ( is => 'ro', isa => ArrayRef [ Dict [ phid => Str ] ] );
-has members => ( is => 'lazy', isa => ArrayRef [Object] );
+has members         => ( is => 'lazy', isa => ArrayRef[PhabUser] );
 
 sub new_from_query {
     my ( $class, $params ) = @_;
