@@ -150,7 +150,6 @@ jobs:
       - deploy:
           command: |
             TAG="$(cat /app/build_info/tag.txt)"
-            [[ "$CIRCLE_BRANCH" == "master" ]] || exit 0
             [[ -n "$DOCKERHUB_REPO" && -n "$DOCKER_USER" && -n "$DOCKER_PASS" ]] || exit 0
             [[ -n "$GITHUB_PERSONAL_TOKEN" ]] || exit 0
             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
