@@ -11,7 +11,7 @@ use 5.10.1;
 use Moo;
 
 use Bugzilla::User;
-
+use Bugzilla::Types qw(:types);
 use Bugzilla::Extension::PhabBugz::Util qw(request);
 
 use List::Util qw(first);

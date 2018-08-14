@@ -15,10 +15,10 @@ use Bugzilla::Bug;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::User;
-use Bugzilla::Types;
+use Bugzilla::Types qw(:types);
 use Bugzilla::Util qw(trim);
 use Bugzilla::Extension::PhabBugz::Constants;
-use Bugzilla::Extension::PhabBugz::Types;
+use Bugzilla::Extension::PhabBugz::Types qw(:types);
 
 use JSON::XS qw(encode_json decode_json);
 use List::Util qw(first);
