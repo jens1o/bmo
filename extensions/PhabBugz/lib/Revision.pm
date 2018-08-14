@@ -19,7 +19,7 @@ use Bugzilla::Error;
 use Bugzilla::Util qw(trim);
 use Bugzilla::Extension::PhabBugz::Project;
 use Bugzilla::Extension::PhabBugz::User;
-use Bugzilla::Extension::PhabBugz::Types;
+use Bugzilla::Extension::PhabBugz::Types qw(:types);
 use Bugzilla::Extension::PhabBugz::Util qw(request);
 
 #########################
