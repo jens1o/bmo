@@ -33,7 +33,7 @@ has 'roles'           => ( is => 'ro', isa => ArrayRef [Str] );
 has 'view_policy'     => ( is => 'ro', isa => Str );
 has 'edit_policy'     => ( is => 'ro', isa => Str );
 has 'bugzilla_id'     => ( is => 'ro', isa => Maybe [Int] );
-has 'bugzilla_user'   => ( is => 'lazy' );
+has 'bugzilla_user'   => ( is => 'lazy', isa => Maybe [User] );
 
 sub BUILDARGS {
     my ( $class, $params ) = @_;

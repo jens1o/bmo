@@ -8,14 +8,17 @@
 package Bugzilla::Extension::PhabBugz::Feed;
 
 use 5.10.1;
-
-use IO::Async::Timer::Periodic;
-use IO::Async::Loop;
-use List::Util qw(first);
-use List::MoreUtils qw(any uniq);
 use Moo;
+
+use IO::Async::Loop;
+use IO::Async::Timer::Periodic;
+use List::MoreUtils qw(any uniq);
+use List::Util qw(first);
 use Scalar::Util qw(blessed);
 use Try::Tiny;
+use Type::Params qw( compile );
+use Type::Utils;
+use Types::Standard qw( :types );
 
 use Bugzilla::Constants;
 use Bugzilla::Error;
@@ -24,7 +27,8 @@ use Bugzilla::Logging;
 use Bugzilla::Mailer;
 use Bugzilla::Search;
 use Bugzilla::Util qw(diff_arrays format_time with_writable_database with_readonly_database);
-
+use Bugzilla::Types qw(:types);
+use Bugzilla::Extension::PhabBugz::Types qw(:types);
 use Bugzilla::Extension::PhabBugz::Constants;
 use Bugzilla::Extension::PhabBugz::Policy;
 use Bugzilla::Extension::PhabBugz::Revision;
@@ -38,6 +42,8 @@ use Bugzilla::Extension::PhabBugz::Util qw(
 );
 
 has 'is_daemon' => ( is => 'rw', default => 0 );
+
+my $Invocant = class_type { class => __PACKAGE__ };
 
 sub start {
     my ($self) = @_;
@@ -345,7 +351,8 @@ sub group_query {
 }
 
 sub process_revision_change {
-    my ($self, $revision_phid, $story_text) = @_;
+    state $check = compile($Invocant, Revision | Str, Str);
+    my ($self, $revision_phid, $changer, $story_text) = $check->(@_);
 
     # Load the revision from Phabricator
     my $revision =
@@ -618,7 +625,8 @@ sub process_revision_change {
 }
 
 sub process_new_user {
-    my ( $self, $user_data ) = @_;
+    state $check = compile($Invocant, HashRef);
+    my ( $self, $user_data ) = $check->(@_);
 
     # Load the user data into a proper object
     my $phab_user = Bugzilla::Extension::PhabBugz::User->new($user_data);
@@ -819,7 +827,8 @@ sub save_last_id {
 }
 
 sub get_group_members {
-    my ( $self, $group ) = @_;
+    state $check = compile($Invocant, Group | Str);
+    my ( $self, $group ) = $check->(@_);
 
     my $group_obj =
       ref $group ? $group : Bugzilla::Group->check( { name => $group, cache => 1 } );
@@ -844,15 +853,24 @@ sub get_group_members {
 }
 
 sub add_flag_comment {
-    my ( $self, $params ) = @_;
+    state $check = compile(
+        $Invocant,
+        Dict [
+            bug        => Bug,
+            attachment => Attachment,
+            comment    => Comment,
+            user       => User,
+            old_flags  => ArrayRef,
+            new_flags  => ArrayRef,
+            timestamp  => Str,
+        ],
+    );
+    my ( $self, $params ) = $check->(@_);
     my ( $bug, $attachment, $comment, $user, $old_flags, $new_flags, $timestamp )
         = @$params{qw(bug attachment comment user old_flags new_flags timestamp)};
 
-    my $old_user;
-    if ($user) {
-        $old_user = Bugzilla->user;
-        Bugzilla->set_user($user);
-    }
+    my $old_user = Bugzilla->user;
+    Bugzilla->set_user($user);
 
     INFO("Flag comment: $comment");
     $bug->add_comment(

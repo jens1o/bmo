@@ -15,14 +15,19 @@ use Bugzilla::Bug;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::User;
+use Bugzilla::Types;
 use Bugzilla::Util qw(trim);
 use Bugzilla::Extension::PhabBugz::Constants;
+use Bugzilla::Extension::PhabBugz::Types;
 
 use JSON::XS qw(encode_json decode_json);
 use List::Util qw(first);
 use LWP::UserAgent;
 use Taint::Util qw(untaint);
 use Try::Tiny;
+use Type::Params qw( compile );
+use Type::Utils;
+use Types::Standard qw( :types );
 
 use base qw(Exporter);
 
@@ -38,7 +43,8 @@ our @EXPORT = qw(
 );
 
 sub create_revision_attachment {
-    my ( $bug, $revision, $timestamp, $submitter ) = @_;
+    state $check = compile(Bug, Revision, Str, User);
+    my ( $bug, $revision, $timestamp, $submitter ) = $check->(@_);
 
     my $phab_base_uri = Bugzilla->params->{phabricator_base_uri};
     ThrowUserError('invalid_phabricator_uri') unless $phab_base_uri;
@@ -54,18 +60,13 @@ sub create_revision_attachment {
 
     # No attachment is present, so we can now create new one
 
-    if (!$timestamp) {
-        ($timestamp) = Bugzilla->dbh->selectrow_array("SELECT NOW()");
-    }
-
     # If submitter, then switch to that user when creating attachment
     my ($old_user, $attachment);
     try {
-        if ($submitter) {
-            $old_user = Bugzilla->user;
-            $submitter->{groups} = [ Bugzilla::Group->get_all ]; # We need to always be able to add attachment
-            Bugzilla->set_user($submitter);
-        }
+        $submitter = dclone($submitter);
+        $old_user = Bugzilla->user;
+        $submitter->{groups} = [ Bugzilla::Group->get_all ]; # We need to always be able to add attachment
+        Bugzilla->set_user($submitter);
 
         $attachment = Bugzilla::Attachment->create(
             {
@@ -154,7 +155,8 @@ sub get_attachment_revisions {
 }
 
 sub request {
-    my ($method, $data) = @_;
+    state $check = compile(Str, HashRef);
+    my ($method, $data) = $check->(@_);
     my $request_cache = Bugzilla->request_cache;
     my $params        = Bugzilla->params;
 
@@ -201,7 +203,7 @@ sub request {
 
 sub set_phab_user {
     my $old_user = Bugzilla->user;
-    my $user = Bugzilla::User->new( { name => PHAB_AUTOMATION_USER } );
+    my $user = Bugzilla::User->check( { name => PHAB_AUTOMATION_USER } );
     $user->{groups} = [ Bugzilla::Group->get_all ];
     Bugzilla->set_user($user);
     return $old_user;
