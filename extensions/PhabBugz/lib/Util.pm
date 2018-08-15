@@ -28,6 +28,7 @@ use Try::Tiny;
 use Type::Params qw( compile );
 use Type::Utils;
 use Types::Standard qw( :types );
+use Storable qw(dclone);
 
 use base qw(Exporter);
 
@@ -102,7 +103,8 @@ sub intersect {
 }
 
 sub get_bug_role_phids {
-    my ($bug) = @_;
+    state $check = compile(Bug);
+    my ($bug) = $check->(@_);
 
     my @bug_users = ( $bug->reporter );
     push(@bug_users, $bug->assigned_to)
@@ -121,12 +123,14 @@ sub get_bug_role_phids {
 }
 
 sub is_attachment_phab_revision {
-    my ($attachment) = @_;
+    state $check = compile(Attachment);
+    my ($attachment) = $check->(@_);
     return $attachment->contenttype eq PHAB_CONTENT_TYPE;
 }
 
 sub get_attachment_revisions {
-    my $bug = shift;
+    state $check = compile(Bug);
+    my ($bug) = $check->(@_);
 
     my @attachments =
       grep { is_attachment_phab_revision($_) } @{ $bug->attachments() };
@@ -210,8 +214,7 @@ sub set_phab_user {
 }
 
 sub get_needs_review {
-    my ($user) = @_;
-    $user //= Bugzilla->user;
+    my $user = Bugzilla->user;
     return unless $user->id;
 
     my $phab_user = Bugzilla::Extension::PhabBugz::User->new_from_query(
