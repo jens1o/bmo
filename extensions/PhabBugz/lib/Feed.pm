@@ -858,7 +858,7 @@ sub add_flag_comment {
         Dict [
             bug        => Bug,
             attachment => Attachment,
-            comment    => Comment,
+            comment    => Str,
             user       => User,
             old_flags  => ArrayRef,
             new_flags  => ArrayRef,
