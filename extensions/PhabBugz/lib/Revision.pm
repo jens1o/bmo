@@ -15,6 +15,7 @@ use Types::Standard -all;
 use Type::Utils;
 
 use Bugzilla::Bug;
+use Bugzilla::Types qw(JSONBool);
 use Bugzilla::Error;
 use Bugzilla::Util qw(trim);
 use Bugzilla::Extension::PhabBugz::Project;
@@ -49,7 +50,7 @@ has reviewers_raw => (
         Dict [
             reviewerPHID => Str,
             status       => Str,
-            isBlocking   => Bool,
+            isBlocking   => Bool | JSONBool,
             actorPHID    => Maybe [Str],
         ],
     ]
@@ -59,7 +60,7 @@ has subscribers_raw => (
     isa => Dict [
         subscriberPHIDs => ArrayRef [Str],
         subscriberCount => Int,
-        viewerIsSubscribed => Bool,
+        viewerIsSubscribed => Bool | JSONBool,
     ]
 );
 has projects_raw => (

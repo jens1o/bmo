@@ -17,6 +17,7 @@ use Bugzilla::Extension::PhabBugz::Util qw(request);
 use List::Util qw(first);
 use Types::Standard -all;
 use Type::Utils;
+use Type::Params qw(compile);
 
 #########################
 #    Initialization     #

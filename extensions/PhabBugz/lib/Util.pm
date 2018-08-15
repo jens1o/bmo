@@ -20,7 +20,7 @@ use Bugzilla::Util qw(trim);
 use Bugzilla::Extension::PhabBugz::Constants;
 use Bugzilla::Extension::PhabBugz::Types qw(:types);
 
-use JSON::XS qw(encode_json decode_json);
+use JSON::MaybeXS qw(encode_json decode_json);
 use List::Util qw(first);
 use LWP::UserAgent;
 use Taint::Util qw(untaint);

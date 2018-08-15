@@ -13,7 +13,7 @@ use warnings;
 
 use Type::Library
     -base,
-    -declare => qw( Bug User Group Attachment Comment );
+    -declare => qw( Bug User Group Attachment Comment JSONBool );
 use Type::Utils -all;
 use Types::Standard -types;
 
@@ -22,5 +22,6 @@ class_type User,       { class => 'Bugzilla::User' };
 class_type Group,      { class => 'Bugzilla::Group' };
 class_type Attachment, { class => 'Bugzilla::Attachment' };
 class_type Comment,    { class => 'Bugzilla::Comment' };
+class_type JSONBool,   { class => 'JSON::PP::Boolean' };
 
 1;
