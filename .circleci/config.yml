@@ -218,24 +218,24 @@ jobs:
           path: /app/artifacts
       - *store_log
 
-  test_selenium:
-    parallelism: 1
-    working_directory: /app
-    docker: *docker_oldtests
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /app/build_info
-      - *default_qa_setup
-      - run: |
-          [[ -f build_info/only_version_changed.txt ]] && exit 0
-          /app/scripts/entrypoint.pl load_test_data --legacy
-      - run: |
-          [[ -f build_info/only_version_changed.txt ]] && exit 0
-          /app/scripts/entrypoint.pl test_selenium | tee artifacts/$CIRCLE_JOB.txt
-      - store_artifacts:
-          path: /app/artifacts
-      - *store_log
+  # test_selenium:
+  #   parallelism: 1
+  #   working_directory: /app
+  #   docker: *docker_oldtests
+  #   steps:
+  #     - checkout
+  #     - attach_workspace:
+  #         at: /app/build_info
+  #     - *default_qa_setup
+  #     - run: |
+  #         [[ -f build_info/only_version_changed.txt ]] && exit 0
+  #         /app/scripts/entrypoint.pl load_test_data --legacy
+  #     - run: |
+  #         [[ -f build_info/only_version_changed.txt ]] && exit 0
+  #         /app/scripts/entrypoint.pl test_selenium | tee artifacts/$CIRCLE_JOB.txt
+  #     - store_artifacts:
+  #         path: /app/artifacts
+  #     - *store_log
 
   test_bmo:
     parallelism: 1
@@ -280,7 +280,7 @@ workflows:
             - test_sanity
             - test_bmo
             - test_webservices
-            - test_selenium
+            # - test_selenium
       - test_sanity:
           filters: *main_filters
           requires:
@@ -293,7 +293,7 @@ workflows:
           filters: *main_filters
           requires:
             - build_info
-      - test_selenium:
-          filters: *main_filters
-          requires:
-            - build_info
+      # - test_selenium:
+      #     filters: *main_filters
+      #     requires:
+      #       - build_info
