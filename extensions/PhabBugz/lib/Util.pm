@@ -28,7 +28,6 @@ use Try::Tiny;
 use Type::Params qw( compile );
 use Type::Utils;
 use Types::Standard qw( :types );
-use Storable qw(dclone);
 
 use base qw(Exporter);
 
@@ -64,9 +63,8 @@ sub create_revision_attachment {
     # If submitter, then switch to that user when creating attachment
     my ($old_user, $attachment);
     try {
-        $submitter = dclone($submitter);
         $old_user = Bugzilla->user;
-        $submitter->{groups} = [ Bugzilla::Group->get_all ]; # We need to always be able to add attachment
+        local $submitter->{groups} = [ Bugzilla::Group->get_all ]; # We need to always be able to add attachment
         Bugzilla->set_user($submitter);
 
         $attachment = Bugzilla::Attachment->create(
