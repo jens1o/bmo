@@ -149,7 +149,11 @@ jobs:
       - *store_log
       - deploy:
           command: |
-            TAG="$(cat /app/build_info/tag.txt)"
+            if [[ "$CIRCLE_BRANCH" == "master" ]]; then
+              TAG="$(cat /app/build_info/tag.txt)"
+            else
+              TAG="$CIRCLE_BRANCH"
+            fi
             [[ -n "$DOCKERHUB_REPO" && -n "$DOCKER_USER" && -n "$DOCKER_PASS" ]] || exit 0
             [[ -n "$GITHUB_PERSONAL_TOKEN" ]] || exit 0
             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
@@ -162,8 +166,10 @@ jobs:
               docker tag bmo "$DOCKERHUB_REPO:$TAG"
               docker push "$DOCKERHUB_REPO:$TAG"
             fi
-            docker tag bmo "$DOCKERHUB_REPO:latest"
-            docker push "$DOCKERHUB_REPO:latest"
+            if [[ "$CIRCLE_BRANCH" == "master" ]]; then
+              docker tag bmo "$DOCKERHUB_REPO:latest"
+              docker push "$DOCKERHUB_REPO:latest"
+            fi
 
   test_sanity:
     parallelism: 1
