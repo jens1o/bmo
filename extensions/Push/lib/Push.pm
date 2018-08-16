@@ -81,8 +81,8 @@ sub heartbeat {
         if ($connector->enabled) {
             my $lcname = lc $connector->name;
             my $backlog;
-            $dd->gauge("${lcname}.backlog", $backlog = Bugzilla->dbh->selectrow_array('SELECT COUNT(*) FROM push_backlog WHERE connector = ?', undef, $connector->name));
-            INFO("${lcname}.backlog is $backlog");
+            $dd->gauge("${lcname}_backlog", $backlog = Bugzilla->dbh->selectrow_array('SELECT COUNT(*) FROM push_backlog WHERE connector = ?', undef, $connector->name));
+            INFO("${lcname}_backlog is $backlog");
         }
     }
 }
