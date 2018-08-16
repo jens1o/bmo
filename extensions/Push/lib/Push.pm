@@ -76,13 +76,13 @@ sub heartbeat {
     my $dd = Bugzilla->datadog('bugzilla.pushd');
 
     $dd->gauge('scheduled_jobs', Bugzilla->dbh->selectrow_array('SELECT COUNT(*) FROM push'));
-
+    INFO("heartbeat");
     foreach my $connector ($self->connectors->list) {
         if ($connector->enabled) {
             my $lcname = lc $connector->name;
             my $backlog;
             $dd->gauge("${lcname}.backlog", $backlog = Bugzilla->dbh->selectrow_array('SELECT COUNT(*) FROM push_backlog WHERE connector = ?', undef, $connector->name));
-            DEBUG("${lcname}.backlog is $backlog");
+            INFO("${lcname}.backlog is $backlog");
         }
     }
 }
