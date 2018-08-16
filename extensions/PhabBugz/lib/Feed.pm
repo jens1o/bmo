@@ -297,12 +297,12 @@ sub group_query {
     foreach my $group (@$sync_groups) {
         # Create group project if one does not yet exist
         my $phab_project_name = 'bmo-' . $group->name;
-        my $project =
-          Bugzilla::Extension::PhabBugz::Project->new_from_query(
+        my $project = Bugzilla::Extension::PhabBugz::Project->new_from_query(
             {
-              name => $phab_project_name
+                name => $phab_project_name
             }
         );
+
 
         if ( !$project ) {
             INFO("Project $phab_project_name not found. Creating.");
@@ -355,15 +355,16 @@ sub process_revision_change {
     my ($self, $revision_phid, $changer, $story_text) = $check->(@_);
 
     # Load the revision from Phabricator
-    my $revision =
-        blessed $revision_phid
-        ? $revision_phid
-        : Bugzilla::Extension::PhabBugz::Revision->new_from_query({ phids => [ $revision_phid ] });
+    my $revision
+      = blessed $revision_phid
+      ? $revision_phid
+      : Bugzilla::Extension::PhabBugz::Revision->new_from_query( { phids => [$revision_phid] } );
 
     # NO BUG ID
 
-    if (!$revision->bug_id) {
-        if ($story_text =~ /\s+created\s+D\d+/) {
+    if ( !$revision->bug_id ) {
+        if ( $story_text =~ /\s+created\s+D\d+/ ) {
+
             # If new revision and bug id was omitted, make revision public
             INFO("No bug associated with new revision. Marking public.");
             $revision->make_public();
@@ -376,7 +377,8 @@ sub process_revision_change {
             return;
         }
     }
-    
+
+
     my $log_message = sprintf(
         "REVISION CHANGE FOUND: D%d: %s | bug: %d | %s",
         $revision->id,
@@ -644,13 +646,12 @@ sub process_new_user {
     # CHECK AND WARN FOR POSSIBLE USERNAME SQUATTING
     INFO("Checking for username squatters");
     my $dbh     = Bugzilla->dbh;
-    my $regexp  = $dbh->quote( ":?:" . quotemeta($phab_user->name) . "[[:>:]]" );
     my $results = $dbh->selectall_arrayref( "
         SELECT userid, login_name, realname
           FROM profiles
-         WHERE userid != ? AND " . $dbh->sql_regexp( 'realname', $regexp ),
+         WHERE userid != ? AND nickname = ?",
         { Slice => {} },
-        $bug_user->id );
+        $bug_user->id, $phab_user->name );
     if (@$results) {
         # The email client will display the Date: header in the desired timezone,
         # so we can always use UTC here.
@@ -827,28 +828,27 @@ sub save_last_id {
 }
 
 sub get_group_members {
-    state $check = compile($Invocant, Group | Str);
+    state $check = compile( $Invocant, Group | Str );
     my ( $self, $group ) = $check->(@_);
 
-    my $group_obj =
-      ref $group ? $group : Bugzilla::Group->check( { name => $group, cache => 1 } );
-
-    my $flat_list = join(',',
-      @{ Bugzilla::Group->flatten_group_membership( $group_obj->id ) } );
+    my $dbh       = Bugzilla->dbh;
+    my $group_obj = ref $group ? $group : Bugzilla::Group->check( { name => $group, cache => 1 } );
+    my $flat_list = Bugzilla::Group->flatten_group_membership( $group_obj->id );
 
     my $user_query = "
       SELECT DISTINCT profiles.userid
         FROM profiles, user_group_map AS ugm
        WHERE ugm.user_id = profiles.userid
              AND ugm.isbless = 0
-             AND ugm.group_id IN($flat_list)";
-    my $user_ids = Bugzilla->dbh->selectcol_arrayref($user_query);
+             AND @{[ $dbh->sql_in('ugm.group_id', $flat_list) ]}
+    ";
+    my $user_ids = $dbh->selectcol_arrayref($user_query);
 
     # Return matching users in Phabricator
     return Bugzilla::Extension::PhabBugz::User->match(
-      {
-        ids => $user_ids
-      }
+        {
+            ids => $user_ids
+        }
     );
 }
 
